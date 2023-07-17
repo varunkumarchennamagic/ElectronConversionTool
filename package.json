@@ -1,0 +1,39 @@
+{
+  "name": "electronconversiontool",
+  "version": "1.0.0",
+  "description": "Covert Docx file to json and html",
+  "main": "main.js",
+  "build": {
+    "appId": "your.app.id",
+    "productName": "docx to json",
+    "directories": {
+      "output": "dist"
+    },
+    "win": {
+      "target": "nsis"
+    },
+    "nsis": {
+      "oneClick": false,
+      "perMachine": true,
+      "allowToChangeInstallationDirectory": true
+    }
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "electron .",
+    "build": "electron-builder",
+    "pack": "electron-builder --dir",
+    "dist": "electron-builder"
+  },
+  "author": "Pankaj",
+  "license": "ISC",
+  "devDependencies": {
+    "electron": "^24.6.2",
+    "electron-builder": "^23.6.0"
+  },
+  "dependencies": {
+    "adm-zip": "^0.5.10",
+    "fs": "0.0.1-security",
+    "mammoth": "^1.6.0"
+  }
+}
