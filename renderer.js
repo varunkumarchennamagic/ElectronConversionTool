@@ -23,7 +23,7 @@ showAlertBtn.addEventListener('click', async () => {
     const result = await convertDocxToHtml(selectedFilePath);
     console.log('Converted HTML:', result);
 
-    const jsonOutput = generateJsonFromHtml(result);
+    const jsonOutput = generateJsonFromHtml(result, selectedFilePath);
     console.log('Generated JSON:', jsonOutput);
 
     const jsonFilePath = "D:/Savvas/ElectronConversionTool/output.json";
@@ -42,13 +42,15 @@ ipcRenderer.on('send-selected-file', async (event, filePath) => {
     const result = await convertDocxToHtml(filePath);
     console.log('Converted HTML:', result);
 
-    const jsonOutput = generateJsonFromHtml(result);
+    const jsonOutput = generateJsonFromHtml(result, filePath);
     console.log('Generated JSON:', jsonOutput);
 
     const jsonFilePath = "D:/Savvas/ElectronConversionTool/output.json";
     fs.writeFileSync(jsonFilePath, JSON.stringify(jsonOutput)); // Save the JSON to the output file
     // Do something with the generated JSON
     // You can display it, process it further, etc.
+
+    // var bodyTag = jsonOutput.children[1]
   } catch (error) {
     console.error('Error converting to HTML:', error);
   }
@@ -68,14 +70,19 @@ const convertDocxToHtml = (filePath) => {
   });
 };
 
-const generateJsonFromHtml = (html) => {
+const generateJsonFromHtml = (html, docxFilePath) => {
   const parser = new DOMParser();
   const doc = parser.parseFromString(html, 'text/html');
-  const jsonOutput = traverseDOM(doc.documentElement);
+  const imagesDir = path.dirname(docxFilePath) + "/images";
+  if (!fs.existsSync(imagesDir)) {
+    fs.mkdirSync(imagesDir);
+  }
+
+  const jsonOutput = traverseDOM(doc.documentElement, imagesDir);
   return jsonOutput;
 };
 
-const traverseDOM = (element) => {
+const traverseDOM = (element, imagesDir) => {
   const jsonNode = {
     tag: element.tagName.toLowerCase(),
     attributes: {},
@@ -88,7 +95,7 @@ const traverseDOM = (element) => {
 
   for (const childNode of element.childNodes) {
     if (childNode.nodeType === Node.ELEMENT_NODE) {
-      const childJsonNode = traverseDOM(childNode);
+      const childJsonNode = traverseDOM(childNode, imagesDir);
       jsonNode.children.push(childJsonNode);
     } else if (childNode.nodeType === Node.TEXT_NODE) {
       const text = childNode.textContent.trim();
@@ -96,6 +103,14 @@ const traverseDOM = (element) => {
         jsonNode.children.push(text);
       }
     }
+  }
+
+  if (jsonNode.tag === 'img') {
+    const base64Data = jsonNode.attributes.src.replace(/^data:image\/png;base64,/, "");
+    const imageFileName = 'image_' + Date.now() + '.png';
+    const imagePath = path.join(imagesDir, imageFileName);
+    fs.writeFileSync(imagePath, base64Data, 'base64');
+    jsonNode.attributes.src = 'images/' + imageFileName;
   }
 
   return jsonNode;
