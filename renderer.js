@@ -17,24 +17,47 @@ ipcRenderer.on('selected-file', (event, filePath) => {
   selectedFilePathElement.textContent = filePath;
 });
 
+let imageCounter = 1; // Initialize the counter for image naming
+
 showAlertBtn.addEventListener('click', async () => {
   let selectedFilePath = selectedFilePathElement.textContent;
   if (selectedFilePath) {
     const result = await convertDocxToHtml(selectedFilePath);
     console.log('Converted HTML:', result);
 
-    const jsonOutput = generateJsonFromHtml(result, selectedFilePath);
+    const { doc, jsonOutput } = generateJsonFromHtml(result, selectedFilePath);
     console.log('Generated JSON:', jsonOutput);
 
-    const jsonFilePath = "D:/Savvas/ElectronConversionTool/output.json";
+    const outputFolderPath = path.dirname(selectedFilePath);
+    const jsonFilePath = path.join(outputFolderPath, "output.json");
     fs.writeFileSync(jsonFilePath, JSON.stringify(jsonOutput));
 
-    alert('JSON file generated.');
+    const htmlFilePath = path.join(outputFolderPath, "output.html");
+    fs.writeFileSync(htmlFilePath, result); // Write the HTML to output.html
+
+    // Save images in the 'images' folder
+    const imagesFolderPath = path.join(outputFolderPath, "images");
+    fs.mkdirSync(imagesFolderPath, { recursive: true });
+
+    // Find images in the HTML
+    const imageTags = doc.getElementsByTagName("img");
+    for (const imageTag of imageTags) {
+      const base64Data = imageTag.getAttribute("src");
+      const imageExtension = base64Data.substring(base64Data.indexOf("/") + 1, base64Data.indexOf(";base64"));
+      const imageName = `image${imageCounter}.${imageExtension}`;
+      const imagePath = path.join(imagesFolderPath, imageName);
+      fs.writeFileSync(imagePath, base64Data.replace(/^data:image\/(png|jpeg|jpg);base64,/, ""), "base64");
+      imageCounter++;
+      imageTag.setAttribute("src", `images/${imageName}`);
+    }
+
+    alert('HTML and JSON files generated.');
 
   } else {
     alert('No file selected.');
   }
 });
+
 
 ipcRenderer.on('send-selected-file', async (event, filePath) => {
   try {
@@ -79,7 +102,7 @@ const generateJsonFromHtml = (html, docxFilePath) => {
   }
 
   const jsonOutput = traverseDOM(doc.documentElement, imagesDir);
-  return jsonOutput;
+  return { doc, jsonOutput }; // Return both the doc and the jsonOutput
 };
 
 const traverseDOM = (element, imagesDir) => {
