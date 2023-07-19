@@ -2,8 +2,6 @@ const { ipcRenderer } = require('electron');
 const fs = require('fs');
 const path = require('path');
 const mammoth = require('mammoth');
-const admZip = require('adm-zip');
-const outputPath = "D:/Savvas/ElectronConversionTool/output.html";
 const selectFileBtn = document.getElementById('selectFileBtn');
 const selectedFilePathElement = document.getElementById('selectedFilePath');
 const showAlertBtn = document.getElementById('showAlertBtn');
@@ -129,10 +127,7 @@ const traverseDOM = (element, imagesDir) => {
   }
 
   if (jsonNode.tag === 'img') {
-    const base64Data = jsonNode.attributes.src.replace(/^data:image\/png;base64,/, "");
     const imageFileName = 'image_' + Date.now() + '.png';
-    const imagePath = path.join(imagesDir, imageFileName);
-    fs.writeFileSync(imagePath, base64Data, 'base64');
     jsonNode.attributes.src = 'images/' + imageFileName;
   }
 
