@@ -1,0 +1,4 @@
+# ElectronConversionTool
+
+npm i
+electron .
