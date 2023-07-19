@@ -1,7 +1,49 @@
 {
   "type": "Lesson TEMPLATE",
-  "grade": 4,
-  "topic": 20,
-  "lesson": 4,
-  "sections": [{}]
+  "grade": "4",
+  "topic": "20",
+  "lesson": "4",
+  "sections": [
+    {
+      "title": "Lesson 20-4",
+      "titleStyling": "H1",
+      "text": "",
+      "collapsible": false,
+      "subsections": [
+        {
+          "title": "Solving Multiplication Problems",
+          "standards": "4.OA.A.2; 4.OA.A.3; 4.NBT.B.5; MP.1; MP.2",
+          "lessonObj": "4.OA.A.2"
+        }
+      ]
+    },
+    {
+      "title": "",
+      "titleStyling": "",
+      "text": "",
+      "collapsible": false,
+      "subsections": []
+    },
+    {
+      "title": "",
+      "titleStyling": "",
+      "text": "",
+      "collapsible": false,
+      "subsections": []
+    },
+    {
+      "title": "",
+      "titleStyling": "",
+      "text": "",
+      "collapsible": false,
+      "subsections": []
+    },
+    {
+      "title": "",
+      "titleStyling": "",
+      "text": "",
+      "collapsible": false,
+      "subsections": []
+    }
+  ]
 }

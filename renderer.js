@@ -5,6 +5,14 @@ const mammoth = require("mammoth");
 const selectFileBtn = document.getElementById("selectFileBtn");
 const selectedFilePathElement = document.getElementById("selectedFilePath");
 const showAlertBtn = document.getElementById("showAlertBtn");
+var finalJson = {
+  type: "",
+  grade: 0,
+  topic: 0,
+  lesson: 0,
+  sections: [],
+};
+
 
 selectFileBtn.addEventListener("click", () => {
   ipcRenderer.send("open-file-dialog");
@@ -58,18 +66,24 @@ showAlertBtn.addEventListener("click", async () => {
 
     // Varun's code
 
-    var finalJson = {
-      type: "Lesson TEMPLATE",
-      grade: 4,
-      topic: 20,
-      lesson: 4,
-      sections: [{}],
-    };
-
     var bodyTag = {};
 
     if (jsonOutput.children) {
       bodyTag = jsonOutput.children[1];
+    }
+
+    if (bodyTag.children && bodyTag.children[0].children) {
+      finalJson.type = bodyTag.children[0].children[0].children[0]
+    }
+
+    finalJson.grade = bodyTag.children[1].children[0].children[0].replace('Grade: ', '')
+    finalJson.topic = bodyTag.children[2].children[0].children[0].replace('Topic: ', '')
+    finalJson.lesson = bodyTag.children[3].children[0].children[0].replace('Lesson: ', '')
+
+    for (var i=4; i<bodyTag.children.length; i++) {
+      if (bodyTag.children[i].tag=='table') {
+        finalJson.sections.push(parseTableBody(bodyTag.children[i].children[0]))
+      }
     }
 
     const finalJsonFilePath = path.join(outputFolderPath, "final_output.json");
@@ -81,6 +95,55 @@ showAlertBtn.addEventListener("click", async () => {
     alert("No file selected.");
   }
 });
+
+function parseTableBody(jsonData) {
+  const modifiedData = {
+    title: "",
+    titleStyling: "",
+    text: "",
+    collapsible: false,
+    subsections: [],
+  };
+
+  for (const child of jsonData.children) {
+    if (child.tag === "tr") {
+      const title = child.children[0].children[0].children[0];
+      const value = child.children[1].children[0]?child.children[1].children[0].children[0]:'';
+
+      switch (title) {
+        case "EXMFE.G4.T20.L4.EN_section_1_title":
+          modifiedData.title = value;
+          break;
+        case "EXMFE.G4.T20.L4.EN_section_1_titleStyling":
+          modifiedData.titleStyling = value;
+          break;
+        case "EXMFE.G4.T20.L4.EN_section_1_text":
+          modifiedData.text = value;
+          break;
+        case "EXMFE.G4.T20.L4.EN_section_1_collapsible":
+          modifiedData.collapsible = value === "true";
+          break;
+        case "EXMFE.G4.T20.L4.EN_section_1_sub_1_title":
+          modifiedData.subsections.push({ title: value });
+          break;
+        case "EXMFE.G4.T20.L4.EN_section_1_sub_1_standards":
+          modifiedData.subsections[modifiedData.subsections.length - 1].standards = value;
+          break;
+        case "EXMFE.G4.T20.L4.EN_section_1_sub_1_lessonObj":
+          modifiedData.subsections[modifiedData.subsections.length - 1].lessonObj = value;
+          break;
+        case "EXMFE.G4.T20.L4.EN_section_1_sub_1_columns":
+          modifiedData.subsections[modifiedData.subsections.length - 1].columns = parseInt(value);
+          break;
+        case "EXMFE.G4.T20.L4.EN_section_1_sub_1_text":
+          modifiedData.subsections[modifiedData.subsections.length - 1].text = value;
+          break;
+      }
+    }
+  }
+
+  return modifiedData;
+}
 
 ipcRenderer.on("send-selected-file", async (event, filePath) => {
   try {
