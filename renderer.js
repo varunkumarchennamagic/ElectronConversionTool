@@ -104,13 +104,13 @@ showAlertBtn.addEventListener("click", async () => {
 });
 
 function parseTableBody(jsonData) {
-  const modifiedData = {
-    title: "",
-    titleStyling: "",
-    text: "",
-    collapsible: false,
-    subsections: [],
-  };
+  // const modifiedData = {
+  //   title: "",
+  //   titleStyling: "",
+  //   text: "",
+  //   collapsible: false,
+  //   subsections: [],
+  // };
 
   for (const child of jsonData.children) {
     if (child.tag === "tr") {
@@ -119,14 +119,13 @@ function parseTableBody(jsonData) {
         ? child.children[1].children[0].children[0]
         : "";
 
-      if (title[3]=='text') {
-        value = ''
-        for (const text of child.children[1].children) {
-          value += text.children
-        }
+      if (title[3] == "text") {
+        value = parseText(child.children[1].children);
+        // for (const text of child.children[1].children) {
+        //   value += text.children
+        // }
       }
       if (title[3] != "sub") {
-        modifiedData[title[3]] = value;
         if (!finalJson.sections[title[2] - 1]) {
           finalJson.sections[title[2] - 1] = {
             title: "",
@@ -170,8 +169,32 @@ function parseTableBody(jsonData) {
       // }
     }
   }
+}
 
-  return modifiedData;
+function parseText(tagsArray) {
+  var value = "";
+  for (const child of tagsArray) {
+    if (child.children && child.children.length > 0) {
+      value += "<p>";
+      for (const grandChild of child.children) {
+        if (grandChild.tag) {
+          value +=
+            "<" +
+            grandChild.tag +
+            ">" +
+            grandChild.children[0] +
+            "</" +
+            grandChild.tag +
+            ">";
+        } else {
+          value += grandChild;
+        }
+      }
+      value += "</p>";
+    }
+  }
+  console.log({ value });
+  return value;
 }
 
 ipcRenderer.on("send-selected-file", async (event, filePath) => {
