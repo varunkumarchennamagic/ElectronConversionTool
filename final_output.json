@@ -8,41 +8,28 @@
       "title": "Lesson 20-4",
       "titleStyling": "H1",
       "text": "",
-      "collapsible": false,
-      "subsections": [
-        {
-          "title": "Solving Multiplication Problems",
-          "standards": "4.OA.A.2; 4.OA.A.3; 4.NBT.B.5; MP.1; MP.2",
-          "lessonObj": "4.OA.A.2"
-        }
-      ]
-    },
-    {
-      "title": "",
-      "titleStyling": "",
-      "text": "",
-      "collapsible": false,
+      "collapsible": "false",
       "subsections": []
     },
     {
-      "title": "",
-      "titleStyling": "",
-      "text": "",
-      "collapsible": false,
+      "title": "SUM IT UP",
+      "titleStyling": "H2",
+      "text": "Dear parent or guardian:This is a summary of the key ideas in this lesson. It can be used to support students’ learning.",
+      "collapsible": "true",
       "subsections": []
     },
     {
-      "title": "",
-      "titleStyling": "",
-      "text": "",
-      "collapsible": false,
+      "title": "NOTES",
+      "titleStyling": "H2",
+      "text": "Multiplication expressions are usually described the following ways for consistency, although mathematically both 12 × 26 and 26 × 12 are correct.For equal-group situations:12 groups of 26 would be written as 12 × 26.For comparison situations:12 times as many as 26 would be written as 12 × 26.Rather than just asking students to recognize and solve problem situations that involve multiplication, it is also useful to have them create problem situations involving multiplication. This provides insight into what students think multiplication is all about.",
+      "collapsible": "true",
       "subsections": []
     },
     {
-      "title": "",
-      "titleStyling": "",
-      "text": "",
-      "collapsible": false,
+      "title": "DEFINITIONS",
+      "titleStyling": "H2",
+      "text": "[object Object],the amount of space in a 2-D shape; the number of 2-D units that cover a space; for example, a rectangle that is 2 units by 3 units has an area of 6 square units[object Object],one of the numbers you multiply in a multiplication equation; for example, in 2 × 5 = 10, 2 and 5 are factors[object Object],the result of multiplying; for example, in 3 × 4 = 12, 12 is the product",
+      "collapsible": "true",
       "subsections": []
     }
   ]

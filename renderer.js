@@ -13,7 +13,6 @@ var finalJson = {
   sections: [],
 };
 
-
 selectFileBtn.addEventListener("click", () => {
   ipcRenderer.send("open-file-dialog");
 });
@@ -73,22 +72,30 @@ showAlertBtn.addEventListener("click", async () => {
     }
 
     if (bodyTag.children && bodyTag.children[0].children) {
-      finalJson.type = bodyTag.children[0].children[0].children[0]
+      finalJson.type = bodyTag.children[0].children[0].children[0];
     }
 
-    finalJson.grade = bodyTag.children[1].children[0].children[0].replace('Grade: ', '')
-    finalJson.topic = bodyTag.children[2].children[0].children[0].replace('Topic: ', '')
-    finalJson.lesson = bodyTag.children[3].children[0].children[0].replace('Lesson: ', '')
+    finalJson.grade = bodyTag.children[1].children[0].children[0].replace(
+      "Grade: ",
+      ""
+    );
+    finalJson.topic = bodyTag.children[2].children[0].children[0].replace(
+      "Topic: ",
+      ""
+    );
+    finalJson.lesson = bodyTag.children[3].children[0].children[0].replace(
+      "Lesson: ",
+      ""
+    );
 
-    for (var i=4; i<bodyTag.children.length; i++) {
-      if (bodyTag.children[i].tag=='table') {
-        finalJson.sections.push(parseTableBody(bodyTag.children[i].children[0]))
+    for (var i = 4; i < bodyTag.children.length; i++) {
+      if (bodyTag.children[i].tag == "table") {
+        parseTableBody(bodyTag.children[i].children[0]);
       }
     }
 
     const finalJsonFilePath = path.join(outputFolderPath, "final_output.json");
     fs.writeFileSync(finalJsonFilePath, JSON.stringify(finalJson));
-
 
     alert("HTML and JSON files generated.");
   } else {
@@ -107,38 +114,60 @@ function parseTableBody(jsonData) {
 
   for (const child of jsonData.children) {
     if (child.tag === "tr") {
-      const title = child.children[0].children[0].children[0];
-      const value = child.children[1].children[0]?child.children[1].children[0].children[0]:'';
+      const title = child.children[0].children[0].children[0].split("_");
+      var value = child.children[1].children[0]
+        ? child.children[1].children[0].children[0]
+        : "";
 
-      switch (title) {
-        case "EXMFE.G4.T20.L4.EN_section_1_title":
-          modifiedData.title = value;
-          break;
-        case "EXMFE.G4.T20.L4.EN_section_1_titleStyling":
-          modifiedData.titleStyling = value;
-          break;
-        case "EXMFE.G4.T20.L4.EN_section_1_text":
-          modifiedData.text = value;
-          break;
-        case "EXMFE.G4.T20.L4.EN_section_1_collapsible":
-          modifiedData.collapsible = value === "true";
-          break;
-        case "EXMFE.G4.T20.L4.EN_section_1_sub_1_title":
-          modifiedData.subsections.push({ title: value });
-          break;
-        case "EXMFE.G4.T20.L4.EN_section_1_sub_1_standards":
-          modifiedData.subsections[modifiedData.subsections.length - 1].standards = value;
-          break;
-        case "EXMFE.G4.T20.L4.EN_section_1_sub_1_lessonObj":
-          modifiedData.subsections[modifiedData.subsections.length - 1].lessonObj = value;
-          break;
-        case "EXMFE.G4.T20.L4.EN_section_1_sub_1_columns":
-          modifiedData.subsections[modifiedData.subsections.length - 1].columns = parseInt(value);
-          break;
-        case "EXMFE.G4.T20.L4.EN_section_1_sub_1_text":
-          modifiedData.subsections[modifiedData.subsections.length - 1].text = value;
-          break;
+      if (title[3]=='text') {
+        value = ''
+        for (const text of child.children[1].children) {
+          value += text.children
+        }
       }
+      if (title[3] != "sub") {
+        modifiedData[title[3]] = value;
+        if (!finalJson.sections[title[2] - 1]) {
+          finalJson.sections[title[2] - 1] = {
+            title: "",
+            titleStyling: "",
+            text: "",
+            collapsible: false,
+            subsections: [],
+          };
+        }
+        finalJson.sections[title[2] - 1][title[3]] = value;
+      }
+
+      // switch (title) {
+      //   case "EXMFE.G4.T20.L4.EN_section_1_title":
+      //     modifiedData.title = value;
+      //     break;
+      //   case "EXMFE.G4.T20.L4.EN_section_1_titleStyling":
+      //     modifiedData.titleStyling = value;
+      //     break;
+      //   case "EXMFE.G4.T20.L4.EN_section_1_text":
+      //     modifiedData.text = value;
+      //     break;
+      //   case "EXMFE.G4.T20.L4.EN_section_1_collapsible":
+      //     modifiedData.collapsible = value === "true";
+      //     break;
+      //   case "EXMFE.G4.T20.L4.EN_section_1_sub_1_title":
+      //     modifiedData.subsections.push({ title: value });
+      //     break;
+      //   case "EXMFE.G4.T20.L4.EN_section_1_sub_1_standards":
+      //     modifiedData.subsections[modifiedData.subsections.length - 1].standards = value;
+      //     break;
+      //   case "EXMFE.G4.T20.L4.EN_section_1_sub_1_lessonObj":
+      //     modifiedData.subsections[modifiedData.subsections.length - 1].lessonObj = value;
+      //     break;
+      //   case "EXMFE.G4.T20.L4.EN_section_1_sub_1_columns":
+      //     modifiedData.subsections[modifiedData.subsections.length - 1].columns = parseInt(value);
+      //     break;
+      //   case "EXMFE.G4.T20.L4.EN_section_1_sub_1_text":
+      //     modifiedData.subsections[modifiedData.subsections.length - 1].text = value;
+      //     break;
+      // }
     }
   }
 
@@ -153,7 +182,6 @@ ipcRenderer.on("send-selected-file", async (event, filePath) => {
 
     const jsonOutput = generateJsonFromHtml(result, filePath);
     console.log("Generated JSON:", jsonOutput);
-
   } catch (error) {
     console.error("Error converting to HTML:", error);
   }
