@@ -121,9 +121,6 @@ function parseTableBody(jsonData) {
 
       if (title[3] == "text") {
         value = parseText(child.children[1].children);
-        // for (const text of child.children[1].children) {
-        //   value += text.children
-        // }
       }
       if (title[3] != "sub") {
         if (!finalJson.sections[title[2] - 1]) {
@@ -136,6 +133,15 @@ function parseTableBody(jsonData) {
           };
         }
         finalJson.sections[title[2] - 1][title[3]] = value;
+      }
+      else { //_sub... found
+        if (!finalJson.sections[title[2] - 1].subsections[title[4]-1]){
+          finalJson.sections[title[2] - 1].subsections[title[4]-1] = { title: '', columns: '', text: ''}
+        }
+        if (title[5] == "text") {
+          value = parseText(child.children[1].children);
+        }
+          finalJson.sections[title[2] - 1].subsections[title[4]-1][title[5]] = value
       }
 
       // switch (title) {
@@ -177,7 +183,7 @@ function parseText(tagsArray) {
     if (child.children && child.children.length > 0) {
       value += "<p>";
       for (const grandChild of child.children) {
-        if (grandChild.tag) {
+        if (grandChild.tag && grandChild.tag !='img') {
           value +=
             "<" +
             grandChild.tag +
@@ -185,7 +191,7 @@ function parseText(tagsArray) {
             grandChild.children[0] +
             "</" +
             grandChild.tag +
-            ">";
+            "> ";
         } else {
           value += grandChild;
         }
