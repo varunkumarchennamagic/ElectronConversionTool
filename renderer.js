@@ -104,20 +104,26 @@ showAlertBtn.addEventListener("click", async () => {
 });
 
 function parseTableBody(jsonData) {
-  // const modifiedData = {
-  //   title: "",
-  //   titleStyling: "",
-  //   text: "",
-  //   collapsible: false,
-  //   subsections: [],
-  // };
-
   for (const child of jsonData.children) {
     if (child.tag === "tr") {
       const title = child.children[0].children[0].children[0].split("_");
       var value = child.children[1].children[0]
         ? child.children[1].children[0].children[0]
         : "";
+
+      if (child.children[1].children[0]) {
+        if (
+          child.children[1].children[0].children[0] &&
+          child.children[1].children[0].children[0].tag
+        ) {
+          value = "";
+          for (var temp of child.children[1].children[0].children) {
+            if (temp.children) {
+              value += temp.children[0] + " ";
+            }
+          }
+        }
+      }
 
       if (title[3] == "text") {
         value = parseText(child.children[1].children);
@@ -133,46 +139,21 @@ function parseTableBody(jsonData) {
           };
         }
         finalJson.sections[title[2] - 1][title[3]] = value;
-      }
-      else { //_sub... found
-        if (!finalJson.sections[title[2] - 1].subsections[title[4]-1]){
-          finalJson.sections[title[2] - 1].subsections[title[4]-1] = { title: '', columns: '', text: ''}
+      } else {
+        //_sub... found
+        if (!finalJson.sections[title[2] - 1].subsections[title[4] - 1]) {
+          finalJson.sections[title[2] - 1].subsections[title[4] - 1] = {
+            title: "",
+            columns: "",
+            text: "",
+          };
         }
         if (title[5] == "text") {
           value = parseText(child.children[1].children);
         }
-          finalJson.sections[title[2] - 1].subsections[title[4]-1][title[5]] = value
+        finalJson.sections[title[2] - 1].subsections[title[4] - 1][title[5]] =
+          value;
       }
-
-      // switch (title) {
-      //   case "EXMFE.G4.T20.L4.EN_section_1_title":
-      //     modifiedData.title = value;
-      //     break;
-      //   case "EXMFE.G4.T20.L4.EN_section_1_titleStyling":
-      //     modifiedData.titleStyling = value;
-      //     break;
-      //   case "EXMFE.G4.T20.L4.EN_section_1_text":
-      //     modifiedData.text = value;
-      //     break;
-      //   case "EXMFE.G4.T20.L4.EN_section_1_collapsible":
-      //     modifiedData.collapsible = value === "true";
-      //     break;
-      //   case "EXMFE.G4.T20.L4.EN_section_1_sub_1_title":
-      //     modifiedData.subsections.push({ title: value });
-      //     break;
-      //   case "EXMFE.G4.T20.L4.EN_section_1_sub_1_standards":
-      //     modifiedData.subsections[modifiedData.subsections.length - 1].standards = value;
-      //     break;
-      //   case "EXMFE.G4.T20.L4.EN_section_1_sub_1_lessonObj":
-      //     modifiedData.subsections[modifiedData.subsections.length - 1].lessonObj = value;
-      //     break;
-      //   case "EXMFE.G4.T20.L4.EN_section_1_sub_1_columns":
-      //     modifiedData.subsections[modifiedData.subsections.length - 1].columns = parseInt(value);
-      //     break;
-      //   case "EXMFE.G4.T20.L4.EN_section_1_sub_1_text":
-      //     modifiedData.subsections[modifiedData.subsections.length - 1].text = value;
-      //     break;
-      // }
     }
   }
 }
@@ -180,26 +161,42 @@ function parseTableBody(jsonData) {
 function parseText(tagsArray) {
   var value = "";
   for (const child of tagsArray) {
-    if (child.children && child.children.length > 0) {
+    if (child.children) {
       value += "<p>";
       for (const grandChild of child.children) {
-        if (grandChild.tag && grandChild.tag !='img') {
-          value +=
-            "<" +
-            grandChild.tag +
-            ">" +
-            grandChild.children[0] +
-            "</" +
-            grandChild.tag +
-            "> ";
+        if (grandChild.tag) {
+          if (grandChild.tag != "img") {
+            value +=
+              "<" +
+              grandChild.tag +
+              ">" +
+              grandChild.children[0] +
+              "</" +
+              grandChild.tag +
+              "> ";
+          }
         } else {
-          value += grandChild;
+          if (grandChild.startsWith("<<img")) {
+            value += grandChild
+              .replace("<<img", '<div class="imgHolder"><img')
+              .replace(">>", "></div>");
+          } else {
+            value += grandChild;
+          }
         }
       }
       value += "</p>";
     }
   }
-  console.log({ value });
+  if (value == "<p></p>") {
+    // text is empty condition
+    value = "";
+  }
+
+  var re = new RegExp(String.fromCharCode(160), "g"); //replacing &nbsp;
+  value = value.replaceAll("<p></p>", "<br>").replaceAll(re, " ");
+
+  // console.log({ value });
   return value;
 }
 
@@ -218,8 +215,12 @@ ipcRenderer.on("send-selected-file", async (event, filePath) => {
 
 const convertDocxToHtml = (filePath) => {
   return new Promise((resolve, reject) => {
+    var options = {
+      styleMap: ["b => b", "i => i", "u => u", "br => br"],
+      ignoreEmptyParagraphs: false,
+    };
     mammoth
-      .convertToHtml({ path: filePath })
+      .convertToHtml({ path: filePath }, options)
       .then((result) => {
         const html = result.value; // The generated HTML
         resolve(html);
