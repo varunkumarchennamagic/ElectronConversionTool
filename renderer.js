@@ -33,36 +33,6 @@ showAlertBtn.addEventListener("click", async () => {
     const { doc, jsonOutput } = generateJsonFromHtml(result, selectedFilePath);
     console.log("Generated JSON:", jsonOutput);
 
-    const outputFolderPath = path.dirname(selectedFilePath);
-    const jsonFilePath = path.join(outputFolderPath, "output.json");
-    fs.writeFileSync(jsonFilePath, JSON.stringify(jsonOutput));
-
-    const htmlFilePath = path.join(outputFolderPath, "output.html");
-    fs.writeFileSync(htmlFilePath, result); // Write the HTML to output.html
-
-    // Save images in the 'images' folder
-    const imagesFolderPath = path.join(outputFolderPath, "images");
-    fs.mkdirSync(imagesFolderPath, { recursive: true });
-
-    // Find images in the HTML
-    const imageTags = doc.getElementsByTagName("img");
-    for (const imageTag of imageTags) {
-      const base64Data = imageTag.getAttribute("src");
-      const imageExtension = base64Data.substring(
-        base64Data.indexOf("/") + 1,
-        base64Data.indexOf(";base64")
-      );
-      const imageName = `image${imageCounter}.${imageExtension}`;
-      const imagePath = path.join(imagesFolderPath, imageName);
-      fs.writeFileSync(
-        imagePath,
-        base64Data.replace(/^data:image\/(png|jpeg|jpg);base64,/, ""),
-        "base64"
-      );
-      imageCounter++;
-      imageTag.setAttribute("src", `images/${imageName}`);
-    }
-
     // Magic developer's code
 
     var bodyTag = {};
@@ -93,9 +63,52 @@ showAlertBtn.addEventListener("click", async () => {
         parseTableBody(bodyTag.children[i].children[0]);
       }
     }
+    const outputFolderPath = path.dirname(selectedFilePath);
 
-    const finalJsonFilePath = path.join(outputFolderPath, "final_output.json");
+    // Write final_output.json to a separate folder named after the input file
+    const inputFileBasename = path.basename(
+      selectedFilePath,
+      path.extname(selectedFilePath)
+    );
+    const finalOutputFolderPath = path.join(
+      outputFolderPath,
+      inputFileBasename
+    );
+    fs.mkdirSync(finalOutputFolderPath, { recursive: true });
+    const finalJsonFilePath = path.join(
+      finalOutputFolderPath,
+      inputFileBasename + ".json"
+    );
     fs.writeFileSync(finalJsonFilePath, JSON.stringify(finalJson));
+
+    const jsonFilePath = path.join(finalOutputFolderPath, "output.json");
+    fs.writeFileSync(jsonFilePath, JSON.stringify(jsonOutput));
+
+    const htmlFilePath = path.join(finalOutputFolderPath, "output.html");
+    fs.writeFileSync(htmlFilePath, result); // Write the HTML to output.html
+
+    // Save images in the 'images' folder
+    const imagesFolderPath = path.join(finalOutputFolderPath, "images");
+    fs.mkdirSync(imagesFolderPath, { recursive: true });
+
+    // Find images in the HTML
+    const imageTags = doc.getElementsByTagName("img");
+    for (const imageTag of imageTags) {
+      const base64Data = imageTag.getAttribute("src");
+      const imageExtension = base64Data.substring(
+        base64Data.indexOf("/") + 1,
+        base64Data.indexOf(";base64")
+      );
+      const imageName = `image${imageCounter}.${imageExtension}`;
+      const imagePath = path.join(imagesFolderPath, imageName);
+      fs.writeFileSync(
+        imagePath,
+        base64Data.replace(/^data:image\/(png|jpeg|jpg);base64,/, ""),
+        "base64"
+      );
+      imageCounter++;
+      imageTag.setAttribute("src", `images/${imageName}`);
+    }
 
     alert("HTML and JSON files generated.");
   } else {
