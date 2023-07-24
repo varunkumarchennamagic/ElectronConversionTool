@@ -63,7 +63,7 @@ showAlertBtn.addEventListener("click", async () => {
       imageTag.setAttribute("src", `images/${imageName}`);
     }
 
-    // Varun's code
+    // Magic developer's code
 
     var bodyTag = {};
 
