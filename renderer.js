@@ -9,7 +9,6 @@ var finalJson = {
   type: "",
   grade: 0,
   topic: 0,
-  lesson: 0,
   sections: [],
 };
 
@@ -53,12 +52,20 @@ showAlertBtn.addEventListener("click", async () => {
       "Topic: ",
       ""
     );
-    finalJson.lesson = bodyTag.children[3].children[0].children[0].replace(
-      "Lesson: ",
-      ""
-    );
 
-    for (var i = 4; i < bodyTag.children.length; i++) {
+    var lessonFlag = false;
+    var startPosition = 4;
+
+    if (finalJson.type.toUpperCase() == "LESSON TEMPLATE") {
+      lessonFlag = true;
+      startPosition = 3;
+      finalJson.lesson = bodyTag.children[3].children[0].children[0].replace(
+        "Lesson: ",
+        ""
+      );
+    }
+
+    for (var i = startPosition; i < bodyTag.children.length; i++) {
       if (bodyTag.children[i].tag == "table") {
         parseTableBody(bodyTag.children[i].children[0]);
       }
@@ -81,10 +88,13 @@ showAlertBtn.addEventListener("click", async () => {
     );
     fs.writeFileSync(finalJsonFilePath, JSON.stringify(finalJson));
 
-    const jsonFilePath = path.join(finalOutputFolderPath, "output.json");
-    fs.writeFileSync(jsonFilePath, JSON.stringify(jsonOutput));
+    // const jsonFilePath = path.join(finalOutputFolderPath, "output.json");
+    // fs.writeFileSync(jsonFilePath, JSON.stringify(jsonOutput));
 
-    const htmlFilePath = path.join(finalOutputFolderPath, "output.html");
+    const htmlFilePath = path.join(
+      finalOutputFolderPath,
+      inputFileBasename + ".html"
+    );
     fs.writeFileSync(htmlFilePath, result); // Write the HTML to output.html
 
     // Save images in the 'images' folder
